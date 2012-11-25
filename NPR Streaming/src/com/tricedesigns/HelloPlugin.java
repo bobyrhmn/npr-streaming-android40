@@ -2,6 +2,7 @@ package com.tricedesigns;
 
 import org.apache.cordova.api.Plugin;
 import org.apache.cordova.api.PluginResult;
+
 import org.json.JSONArray;
 
 import android.util.Log;

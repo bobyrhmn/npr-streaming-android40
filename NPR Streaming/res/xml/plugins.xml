@@ -17,5 +17,5 @@
     <plugin name="Capture" value="org.apache.cordova.Capture"/>
     <plugin name="Battery" value="org.apache.cordova.BatteryListener"/>
     <!-- plugin name="PGLowLatencyAudio" value="com.phonegap.streaming.PGLowLatencyAudio" /> -->
-    <plugin name="com.tricedesigns.HelloPlugin" value="com.tricedesigns.HelloPlugin"/> 
+    <plugin name="com.streaming.StreamAudio" value="com.streaming.StreamAudio"/> 
 </plugins>
