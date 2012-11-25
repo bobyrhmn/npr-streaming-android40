@@ -67,24 +67,35 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 				mp.reset();
 			}
 			try{
-				mp.setDataSource(ctx.getContext(), myUri); // Go to Initialized state
-				mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+				//mp.setDataSource(ctx.getContext(), myUri); // Go to Initialized state
+				mp.setDataSource(myUri.toString()); // Go to Initialized state
+				//mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
 				mp.prepare();
+				mp.start();
 			}
-			catch(IllegalStateException e){
-				mp.reset();
+			catch (IllegalArgumentException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IllegalStateException e) {
+                // TODO Auto-generated catch block
+            	e.printStackTrace();
+            	mp.reset();
 				mp.prepare();
-			}
 			
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+			 
 			
 			
 			mp.start();
-			/*if(mp.isPlaying()){
+			if(mp.isPlaying()){
 				mp.setOnBufferingUpdateListener(this);
 			}
 			mp.setOnPreparedListener(this);
 			mp.setOnErrorListener(this);
-			*/
+			 
 			
 
 			Log.d(TAG, "LoadClip Done");
