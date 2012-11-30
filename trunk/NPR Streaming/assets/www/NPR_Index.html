@@ -14,6 +14,7 @@
 	
 	function onBodyLoad()
 	{		
+		
 		document.addEventListener("deviceready", onDeviceReady, false);
 	}
 	
@@ -24,14 +25,20 @@
 	function onDeviceReady()
 	{
 		// do your thing!
-		navigator.notification.alert("Cordova is working")
+		//navigator.notification.alert("Cordova is working");
 	}
         
-    function callNativePlugin( urlName ) {
-    	 
-    	BufferAudioPlugin.callNativeFunction( nativePluginResultHandler, nativePluginErrorHandler, urlName );
+    function playRadio( urlName ) {
+    	navigator.notification.alert("In Play Radio");
+    	BufferAudioPlugin.bufferRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
     }
-                                       
+       
+    function stopRadio( urlName ) {
+    	navigator.notification.alert("In Stop Radio");
+    	BufferAudioPlugin.stopRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
+    }
+    
+    
     function nativePluginResultHandler (result) {
        alert("SUCCESS: \r\n"+result );
     }
@@ -49,9 +56,8 @@
     </script>
     </head>
 	<body onload="onBodyLoad()">
-		<h1>Hey, it's Cordova!</h1>
-	       
-		<button onclick="callNativePlugin('http://live.str3am.com:2410/wypr');">Click to invoke the Native Plugin with an SUCCESS!</button>
-		 
+		<h1>Hello!</h1>	       
+		<button onclick="playRadio('http://live.str3am.com:2410/wypr');">Click to Play Radio!</button>
+		<button onclick="stopRadio('http://live.str3am.com:2410/wypr');">Click to Stop Radio!</button>
 	</body>
 </html>
