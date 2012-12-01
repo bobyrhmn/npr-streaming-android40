@@ -40,7 +40,7 @@ import android.util.Log;
  *http://stackoverflow.com/questions/8681550/android-2-2-mediaplayer-is-working-fine-with-one-shoutcast-url-but-not-with-the
  *
  */
-public class StreamAudio extends Plugin implements
+public class CopyOfStreamAudio extends Plugin implements
 MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener,
 MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 	
