@@ -44,21 +44,24 @@ public class StreamAudio extends Plugin implements
 MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener,
 MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 	
+	public static final int numberOfTempFiles = 2;
+	public static String dirPath = "/sdcard/data/NPRmedia/";
 	private int INTIAL_KB_BUFFER ;
     private int BIT = 8 ;
     private int SECONDS = 30 ;
     private File downloadingMediaFile ; 
-	private String DOWNFILE = "downloadingMediaFile";
+	private String FILE_NAME_SDCARD = "media";
 	private Vector<MediaPlayer> mediaplayers = new Vector<MediaPlayer>(3);
 	private int playedcounter = 0;
 	
 	private MediaPlayer mediaPlayer = null;
-	private String TAG = "Poorni" + getClass().getSimpleName();
+	private String TAG = "PoorniPlayMusic";
 	  
 	private long mediaLengthInKb, mediaLengthInSeconds;
 	private int totalKbRead = 0;
 	 
 	private boolean isInterrupted; 
+	private boolean firstTime = true;
 	private int counter = 0;
 
 	public static String streamURL;
@@ -72,26 +75,34 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 	public static final String LOOP="loop";
 	public static final String UNLOAD="unload";
 	public PluginResult result = null;
+	public PlayMusic playMusic = null;
 
 	@SuppressWarnings("deprecation")
 	@Override
 	public PluginResult execute(String action, JSONArray data, String callbackId) 
-	{
-		
+	{	
+		playMusic = new PlayMusic(dirPath+"play_"+ FILE_NAME_SDCARD);
+		checkDirContents();
 
 		try {
 			streamURL = data.getString(0);
 			Log.d(streamURL, action);
 			if (PRELOAD_AUDIO.equals( action ) ) {
 				result = new PluginResult(Status.OK, "Yay, Success!!!");
-			}else if (BUFFER_AUDIO.equals( action ) ) {
+			}
+			else if (BUFFER_AUDIO.equals( action ) ) {
 				this.startBuffering(streamURL, 48);
-			}else if (PLAY_AUDIO.equals(action )){
+			}
+			else if (PLAY_AUDIO.equals(action )){
 				this.play();
 				result = new PluginResult(Status.OK, "Yay, Success!!!");
-			}else if (STOP_AUDIO.equals(action )){
-				this.stop();
+			}
+			else if (STOP_AUDIO.equals(action )){
+				isInterrupted = true;
+				playMusic.stopMusic();
+				
 				result = new PluginResult(Status.OK, "Yay, Success!!!");
+				checkDirContents();
 			}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
@@ -171,6 +182,7 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 
 	private void stop() {
 		mediaPlayer.stop();
+		isInterrupted = true;
 	}
 	public void onBufferingUpdate(MediaPlayer mp, int percent) {
 		Log.d(TAG, "PlayerService onBufferingUpdate : " + percent + "%");
@@ -212,10 +224,10 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
     	INTIAL_KB_BUFFER =  bitrate * SECONDS / BIT;
     	
 		
-		Runnable r = new Runnable() {
+		Runnable downloadStreamThread = new Runnable() {
 			public void run() {
 				try {
-					downloadingMediaFile = new File("/sdcard/data/", DOWNFILE + counter);
+					downloadingMediaFile = new File(dirPath, FILE_NAME_SDCARD + counter);
 					downloadAudioIncrement(mediaUrl);
 				} catch (IOException e) {
 					Log.e(getClass().getName(), "Initialization error for url=" + mediaUrl, e);
@@ -223,11 +235,11 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 				}
 			}
 		};
-		new Thread(r).start();
+		new Thread(downloadStreamThread).start();
 	}
 
 	public void downloadAudioIncrement(String mediaUrl) throws IOException {
-		final String TAG = "downloadAudioIncrement";
+		 
 
     	URLConnection cn = new URL(mediaUrl).openConnection(); 
         cn.connect();   
@@ -237,209 +249,70 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
         }
         
 		Log.i(TAG, "File name: " + downloadingMediaFile);
-		BufferedOutputStream bout = new BufferedOutputStream ( new FileOutputStream(downloadingMediaFile), 32 * 1024 );   
+		BufferedOutputStream bout = new BufferedOutputStream ( new FileOutputStream(dirPath + FILE_NAME_SDCARD + counter), 32 * 1024);   
         byte buf[] = new byte[16 * 1024];
         int totalBytesRead = 0, incrementalBytesRead = 0;
-        boolean stop = false;
-        do {
+        while (!isInterrupted) {
         	if (bout == null) {
-        		counter++;
-        		Log.i(TAG, "FileOutputStream is null, Create new one: " + DOWNFILE + counter);
-        		downloadingMediaFile = new File("/sdcard/data/", DOWNFILE + counter);
-        		bout = new BufferedOutputStream ( new FileOutputStream(downloadingMediaFile) );	
+        		
+        		if(counter >= numberOfTempFiles) //to have just 5 files for the download stream
+        			counter=0;
+        		else
+        			counter++;
+        		
+        		Log.i(TAG, "Creating file : " + FILE_NAME_SDCARD + counter);
+        		downloadingMediaFile = new File(dirPath, FILE_NAME_SDCARD + counter);
+        		bout = new BufferedOutputStream ( new FileOutputStream(downloadingMediaFile), 32 * 1024 );	
         	}
-
+        	//Read download stream and copies it into the buffer(buf)
         	int numread = stream.read(buf);  
-        	
             if (numread <= 0) {  
                 break;   
-            	
             } else {
-            	//Log.v(TAG, "write to file");
-                bout.write(buf, 0, numread);
-
+                bout.write(buf, 0, numread); //write the current read stream into the temp file
                 totalBytesRead += numread;
                 incrementalBytesRead += numread;
                 totalKbRead = totalBytesRead/1000;
-            }
+            }         
             
-            
-            
-            if ( totalKbRead >= INTIAL_KB_BUFFER && ! stop) {
-            	Log.v(TAG, "Reached Buffer amount we want: " + "totalKbRead: " + totalKbRead + " INTIAL_KB_BUFFER: " + INTIAL_KB_BUFFER);
+            if ( totalKbRead >= INTIAL_KB_BUFFER && !isInterrupted) {
+            	
+            	//Log.v(TAG, "Reached Buffer amount we want: " + "totalKbRead: " + totalKbRead + " INTIAL_KB_BUFFER: " + INTIAL_KB_BUFFER);
             	bout.flush();
             	bout.close();
-            	            	
             	bout = null;
-            	
-            	setupplayer(downloadingMediaFile);
+            	File temp = new File(dirPath+"play_"+ FILE_NAME_SDCARD + counter+ ".dat");
+            	downloadingMediaFile.renameTo(temp);
+            	Log.v(TAG,"Renamed file to " + downloadingMediaFile.toString() );
             	totalBytesRead = 0;
-
+          		
+            	if(firstTime){
+            		firstTime = false;
+            		Thread musicPlayingThread = new Thread(playMusic);
+            		Log.v(TAG,"Invoking musicPlayingThread second thread");
+            		musicPlayingThread.start();
+            	}
             }
             
-        } while (true);   
-
+        }  
        	stream.close();
-
 	}
-   
-	 
-    /**
-     * Test whether we need to transfer buffered data to the MediaPlayer.
-     * Interacting with MediaPlayer on non-main UI thread can causes crashes to so perform this using a Handler.
-     */  
-    private void  setupplayer(File partofaudio) {
-    	final File f = partofaudio;
-    	final String TAG = "poorni setupplayer";
-    	Log.i(TAG, "File " + f.getAbsolutePath());
-	    Runnable r = new Runnable() {
-	        public void run() {
-	        	
-	        	MediaPlayer mp = new MediaPlayer();
-	        	try {
-	        		
-	        		MediaPlayer.OnCompletionListener listener = new MediaPlayer.OnCompletionListener () {
-	        			public void onCompletion(MediaPlayer mp){
-	        				String TAG = "MediaPlayer.OnCompletionListener";
-	        				 
-	        				Log.i(TAG, "Current size of mediaplayer list: " + mediaplayers.size() );
-	        				while (mediaplayers.size() <= 1){
-    			        		Log.v(TAG, "waiting for another mediaplayer");
-    			        	}
-	        				MediaPlayer mp2 = mediaplayers.get(1);
-	        				mp2.setAudioStreamType(AudioManager.STREAM_MUSIC);
-    			        	mp2.start();
-    			        	Log.i(TAG, "Start new player");
-    			        	
-	        				mp.release();
-	        				mediaplayers.remove(mp);
-	        				removefile();
-	        				
-	        			}
-	        		};
-	        		
-	        		FileInputStream ins = new FileInputStream( f );
-	            	mp.setDataSource(ins.getFD());
-	        		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-	        		
-	        		mp.setOnCompletionListener(listener);
-	        		Log.i(TAG, "Prepare Media Player " + f);
-	        		
-	        		if ( ! isInterrupted  ){
-	        			mp.prepare();
-	        		} else {
-	        			//This will save us a few more seconds
-	        			mp.prepareAsync();
-	        		}
-	        		
-	        		mediaplayers.add(mp);
-	        		if ( ! isInterrupted  ){
-		        		Log.i(TAG, "Start Media Player " + f);
-		        		startMediaPlayer();
-		        	}
-	        	} catch  (IllegalStateException	e) {
-	        		Log.e(TAG, e.toString());
-	        	} catch  (IOException	e) {
-	        		Log.e(TAG, e.toString());
-	        	}
-	        	
+ 
+ 	
+ 	public static void checkDirContents() {
+
+ 	    File file = new File(dirPath);
+
+ 	    if (file.exists()) {
+ 	    	 File[] files = file.listFiles();
+ 	        if(files!=null) { //some JVMs return null for empty dirs
+ 	        	for (File f: files) f.delete();
  	        }
-	    };
-	    new Thread(r).start();
-
-    }
-    
-    //Removed file from cache
-    private void removefile (){
-    	String TAG = "removefile";
-    	File temp = new File("/sdcard/data/",DOWNFILE + playedcounter);
-    	Log.i(TAG, temp.getAbsolutePath());
-    	temp.delete();
-    	playedcounter++;
-    }
-    
-	
-	private void startMediaPlayer() {
-        try {   
-        	File bufferedFile = new File("/sdcard/data/","playingMedia" + (counter++) + ".dat");
-        	
-        	// We double buffer the data to avoid potential read/write errors that could happen if the 
-        	// download thread attempted to write at the same time the MediaPlayer was trying to read.
-        	// For example, we can't guarantee that the MediaPlayer won't open a file for playing and leave it locked while 
-        	// the media is playing.  This would permanently deadlock the file download.  To avoid such a deadloack, 
-        	// we move the currently loaded data to a temporary buffer file that we start playing while the remaining 
-        	// data downloads.  
-        	moveFile(downloadingMediaFile,bufferedFile);
-    		
-        	Log.e(getClass().getName(),"Buffered File path: " + bufferedFile.getAbsolutePath());
-        	Log.e(getClass().getName(),"Buffered File length: " + bufferedFile.length()+"");
-        	
-        	mediaPlayer = createMediaPlayer(bufferedFile);
-        	
-    		// We have pre-loaded enough content and started the MediaPlayer so update the buttons & progress meters.
-	    	mediaPlayer.start();
-	    	//poorni startPlayProgressUpdater();        	
-			//poorni playButton.setEnabled(true);
-        } catch (IOException e) {
-        	Log.e(getClass().getName(), "Error initializing the MediaPlayer.", e);
-        	return;
-        }   
-    }
-	
-	
-	 private MediaPlayer createMediaPlayer(File mediaFile)
-			    throws IOException {
-			    	MediaPlayer mPlayer = new MediaPlayer();
-			    	mPlayer.setOnErrorListener(
-							new MediaPlayer.OnErrorListener() {
-						        public boolean onError(MediaPlayer mp, int what, int extra) {
-						        	Log.e(getClass().getName(), "Error in MediaPlayer: (" + what +") with extra (" +extra +")" );
-						    		return false;
-						        }
-						    });
-
-					//  It appears that for security/permission reasons, it is better to pass a FileDescriptor rather than a direct path to the File.
-					//  Also I have seen errors such as "PVMFErrNotSupported" and "Prepare failed.: status=0x1" if a file path String is passed to
-					//  setDataSource().  So unless otherwise noted, we use a FileDescriptor here.
-					FileInputStream fis = new FileInputStream(mediaFile);
-					mPlayer.setDataSource(fis.getFD());
-					mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-					mPlayer.prepare();
-					return mPlayer;
-			    }
-	 
-     /**
-      *  Move the file in oldLocation to newLocation.
-      */
- 	public void moveFile(File	oldLocation, File	newLocation)
- 	throws IOException {
-
- 		if ( oldLocation.exists( )) {
- 			BufferedInputStream  reader = new BufferedInputStream( new FileInputStream(oldLocation) );
- 			BufferedOutputStream  writer = new BufferedOutputStream( new FileOutputStream(newLocation, false));
-             try {
- 		        byte[]  buff = new byte[8192];
- 		        int numChars;
- 		        while ( (numChars = reader.read(  buff, 0, buff.length ) ) != -1) {
- 		        	writer.write( buff, 0, numChars );
-       		    }
-             } catch( IOException ex ) {
- 				throw new IOException("IOException when transferring " + oldLocation.getPath() + " to " + newLocation.getPath());
-             } finally {
-                 try {
-                     if ( reader != null ){                    	
-                     	writer.close();
-                         reader.close();
-                     }
-                 } catch( IOException ex ){
- 				    Log.e(getClass().getName(),"Error closing files when transferring " + oldLocation.getPath() + " to " + newLocation.getPath() ); 
- 				}
-             }
-         } else {
- 			throw new IOException("Old location does not exist when transferring " + oldLocation.getPath() + " to " + newLocation.getPath() );
-         }
+ 	         
+ 	    }else{
+ 	    	new File(dirPath).mkdir();
+ 	    }
  	}
  	
- 
      
 } 

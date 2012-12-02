@@ -29,22 +29,24 @@
 	}
         
     function playRadio( urlName ) {
-    	navigator.notification.alert("In Play Radio");
+    	//navigator.notification.alert("In Play Radio");
     	BufferAudioPlugin.bufferRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
     }
        
     function stopRadio( urlName ) {
-    	navigator.notification.alert("In Stop Radio");
+    	//navigator.notification.alert("In Stop Radio");
     	BufferAudioPlugin.stopRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
     }
     
     
     function nativePluginResultHandler (result) {
-       alert("SUCCESS: \r\n"+result );
+       //alert("SUCCESS: \r\n"+result );
     }
 
     function nativePluginErrorHandler (error) {
-       alert("ERROR: \r\n"+error );
+       //alert("ERROR: \r\n"+error );
+       
+       
        //http://live.str3am.com:2410/wypr
        //http://stream.radiosai.net:8002/
        //http://www.hrupin.com/wp-content/uploads/mp3/testsong_20_sec.mp3 
