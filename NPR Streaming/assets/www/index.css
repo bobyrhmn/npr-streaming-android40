@@ -6,11 +6,12 @@ body {
         margin: 0px;
 }
 
-#elemData { 
+.captions { 
         margin: 20px 2% 0px; 
         background-color: #FFC312;
-        max-hight: 450px;
-        position:absolute;
+        height: 250px;
+        width:350px;  
+        overflow:hidden;
         border:4px Solid #fff;
         /*  overflow:auto;*/
         z-index: 0;

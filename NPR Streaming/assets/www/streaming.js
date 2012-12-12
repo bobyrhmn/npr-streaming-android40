@@ -1,5 +1,7 @@
 function startTextStreaming(){
 	var id_param = getURLParameter('id');
+	var element = document.querySelector('#elemData');
+	
 	var source;
 	if(id_param == null|| id_param == undefined){
 		source = new EventSource('http://skappsrv.towson.edu/npr/stream.php');
@@ -8,8 +10,16 @@ function startTextStreaming(){
 		source = new EventSource('http://skappsrv.towson.edu/npr/stream.php?id='+id_param);
 	}
 	source.onmessage = function(e) {
-	document.getElementById("elemData").innerHTML += e.data;
-};
+		if( element.offsetHeight <= element.scrollHeight || element.offsetWidth <= element.scrollWidth){
+			// your element have overflow
+			document.getElementById("elemData").innerHTML = "";
+		}
+		else{
+			document.getElementById("elemData").innerHTML += e.data;
+		}
+
+
+	};
 	/*setTimeout(function() {
 		source.onmessage = function (event) {
 			document.getElementById("elemData").innerHTML += event.data;
