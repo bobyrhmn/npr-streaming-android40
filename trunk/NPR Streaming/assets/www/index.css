@@ -1,0 +1,17 @@
+body {
+        background-color: #F6F4F2;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: .9em;
+        line-height: 1.1em;
+        margin: 0px;
+}
+
+#elemData { 
+        margin: 20px 2% 0px; 
+        background-color: #FFC312;
+        max-hight: 450px;
+        position:absolute;
+        border:4px Solid #fff;
+        /*  overflow:auto;*/
+        z-index: 0;
+}

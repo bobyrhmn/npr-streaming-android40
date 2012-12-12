@@ -40,11 +40,9 @@ import android.util.Log;
  *http://stackoverflow.com/questions/8681550/android-2-2-mediaplayer-is-working-fine-with-one-shoutcast-url-but-not-with-the
  *
  */
-public class StreamAudio extends Plugin implements
-MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener,
-MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
+public class StreamAudio extends Plugin {
 	
-	public static final int numberOfTempFiles = 2;
+	public static final int numberOfTempFiles = 10;
 	public static String dirPath = "/sdcard/data/NPRmedia/";
 	private int INTIAL_KB_BUFFER ;
     private int BIT = 8 ;
@@ -52,8 +50,6 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
     private File downloadingMediaFile ; 
 	private String FILE_NAME_SDCARD = "media";
 	private Vector<MediaPlayer> mediaplayers = new Vector<MediaPlayer>(3);
-	private int playedcounter = 0;
-	
 	private MediaPlayer mediaPlayer = null;
 	private String TAG = "PoorniPlayMusic";
 	  
@@ -66,16 +62,13 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 
 	public static String streamURL;
 	public static final String ERROR_NO_AUDIOID="A reference does not exist for the specified audio id.";
-	public static final String PRELOAD_AUDIO="preloadAudio";
-	public static final String BUFFER_AUDIO="bufferRadio";
+ 	public static final String BUFFER_AUDIO="bufferRadio";
 	public static final String PLAY_AUDIO="playRadio";
 	public static final String STOP_AUDIO="stopRadio";
-	public static final String PLAY="play";
-	public static final String STOP="stop";
-	public static final String LOOP="loop";
-	public static final String UNLOAD="unload";
-	public PluginResult result = null;
+ 	public PluginResult result = null;
 	public PlayMusic playMusic = null;
+	
+	private Thread downloadStreamThread;
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -87,22 +80,20 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 		try {
 			streamURL = data.getString(0);
 			Log.d(streamURL, action);
-			if (PRELOAD_AUDIO.equals( action ) ) {
-				result = new PluginResult(Status.OK, "Yay, Success!!!");
-			}
-			else if (BUFFER_AUDIO.equals( action ) ) {
+			if (BUFFER_AUDIO.equals( action ) ) {
 				this.startBuffering(streamURL, 48);
 			}
-			else if (PLAY_AUDIO.equals(action )){
-				this.play();
-				result = new PluginResult(Status.OK, "Yay, Success!!!");
-			}
 			else if (STOP_AUDIO.equals(action )){
-				isInterrupted = true;
+				setInterruptThread();
+				//stop the music
 				playMusic.stopMusic();
-				
-				result = new PluginResult(Status.OK, "Yay, Success!!!");
+				//send interrupt to playing thread to cleanup
+				playMusic.interrupt();
+				playMusic.stop();
+				//wait for download thread to complete and then do cleanup of media files
+				downloadStreamThread.join(5000);
 				checkDirContents();
+				result = new PluginResult(Status.OK, "Yay, Success!!!");
 			}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
@@ -117,12 +108,23 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}  
 		return result;
 	}
 
-
-
+	
+	private synchronized void setInterruptThread(){
+		Log.d(TAG,"Setting interrupt to true");
+		isInterrupted = true;
+	}
+	private synchronized void ResetInterruptThread(){
+		Log.d(TAG,"Resetting interrupt to true");
+		isInterrupted = false;
+	}
+/*
 	@Override
 	public void onPrepared(MediaPlayer mp) {
 		Log.d(TAG, "Stream is prepared");
@@ -216,32 +218,30 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 	}
 
 
-
+*/
 	public void startBuffering(final String mediaUrl, int bitrate) throws IOException{
     	final String TAG = "startStreaming";
     	//Set up buffer size
     	//Assume XX kbps * XX seconds / 8 bits per byte
     	INTIAL_KB_BUFFER =  bitrate * SECONDS / BIT;
-    	
-		
-		Runnable downloadStreamThread = new Runnable() {
+    	downloadStreamThread = new Thread() {
 			public void run() {
 				try {
 					downloadingMediaFile = new File(dirPath, FILE_NAME_SDCARD + counter);
 					downloadAudioIncrement(mediaUrl);
 				} catch (IOException e) {
-					Log.e(getClass().getName(), "Initialization error for url=" + mediaUrl, e);
+					Log.d(TAG, "Initialization error for url=" + mediaUrl, e);
 					return;
 				}
 			}
 		};
-		new Thread(downloadStreamThread).start();
+		downloadStreamThread.start();		 
 	}
 
+	
+	
 	public void downloadAudioIncrement(String mediaUrl) throws IOException {
-		 
-
-    	URLConnection cn = new URL(mediaUrl).openConnection(); 
+	   	URLConnection cn = new URL(mediaUrl).openConnection(); 
         cn.connect();   
         InputStream stream = cn.getInputStream();
         if (stream == null) {
@@ -251,19 +251,19 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
 		Log.i(TAG, "File name: " + downloadingMediaFile);
 		BufferedOutputStream bout = new BufferedOutputStream ( new FileOutputStream(dirPath + FILE_NAME_SDCARD + counter), 32 * 1024);   
         byte buf[] = new byte[16 * 1024];
-        int totalBytesRead = 0, incrementalBytesRead = 0;
+        int totalBytesRead = 0;
         while (!isInterrupted) {
         	if (bout == null) {
-        		
         		if(counter >= numberOfTempFiles) //to have just 5 files for the download stream
         			counter=0;
         		else
         			counter++;
         		
-        		Log.i(TAG, "Creating file : " + FILE_NAME_SDCARD + counter);
+        		Log.d(TAG, "Creating file : " + FILE_NAME_SDCARD + counter);
         		downloadingMediaFile = new File(dirPath, FILE_NAME_SDCARD + counter);
         		bout = new BufferedOutputStream ( new FileOutputStream(downloadingMediaFile), 32 * 1024 );	
         	}
+        	
         	//Read download stream and copies it into the buffer(buf)
         	int numread = stream.read(buf);  
             if (numread <= 0) {  
@@ -271,7 +271,6 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
             } else {
                 bout.write(buf, 0, numread); //write the current read stream into the temp file
                 totalBytesRead += numread;
-                incrementalBytesRead += numread;
                 totalKbRead = totalBytesRead/1000;
             }         
             
@@ -283,36 +282,35 @@ MediaPlayer.OnErrorListener,      MediaPlayer.OnBufferingUpdateListener {
             	bout = null;
             	File temp = new File(dirPath+"play_"+ FILE_NAME_SDCARD + counter+ ".dat");
             	downloadingMediaFile.renameTo(temp);
-            	Log.v(TAG,"Renamed file to " + downloadingMediaFile.toString() );
+            	Log.d(TAG,"Renamed file to " + downloadingMediaFile.toString() );
             	totalBytesRead = 0;
           		
             	if(firstTime){
             		firstTime = false;
-            		Thread musicPlayingThread = new Thread(playMusic);
-            		Log.v(TAG,"Invoking musicPlayingThread second thread");
-            		musicPlayingThread.start();
+            		//Thread musicPlayingThread = new Thread(playMusic);
+            		//Log.d(TAG,"Invoking musicPlayingThread second thread");
+            		playMusic.start();
             	}
-            }
-            
+            }           
         }  
        	stream.close();
+       	Log.d(TAG,"Download thread resetting counter and exiting ");
+       	//reset counter to 0
+       	ResetInterruptThread();
+       	firstTime =true;
+       	counter=0;
 	}
  
  	
  	public static void checkDirContents() {
-
  	    File file = new File(dirPath);
-
  	    if (file.exists()) {
  	    	 File[] files = file.listFiles();
  	        if(files!=null) { //some JVMs return null for empty dirs
  	        	for (File f: files) f.delete();
  	        }
- 	         
  	    }else{
  	    	new File(dirPath).mkdir();
  	    }
  	}
- 	
-     
 } 

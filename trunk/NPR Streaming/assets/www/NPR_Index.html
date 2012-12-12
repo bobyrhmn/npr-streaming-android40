@@ -9,48 +9,55 @@
 	<!-- If your application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here -->
 	<script type="text/javascript" charset="utf-8" src="cordova-1.6.0.js"></script> 
     <script type="text/javascript" charset="utf-8" src="BufferAudioPlugin.js"></script>
+    <script type="text/javascript" charset="utf-8" src="streaming.js"></script>
+    <link rel="stylesheet" href="index.css" type="text/css">
     <script type="text/javascript">
-
+	   
 	
-	function onBodyLoad()
-	{		
 		
-		document.addEventListener("deviceready", onDeviceReady, false);
-	}
+    	function onBodyLoad()
+		{		
+			document.addEventListener("deviceready", onDeviceReady, false);
+		}
+		
+		/* When this function is called, Cordova has been initialized and is ready to roll */
+		/* If you are supporting your own protocol, the var invokeString will contain any arguments to the app launch.
+		see http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
+		for more details -jm */
+		function onDeviceReady()
+		{
+			// do your thing!
+			navigator.notification.alert("Cordova is working");
+			startTextStreaming();
+			/*var xhr = new XMLHttpRequest();
+			xhr.open('GET','http://skappsrv.towson.edu/npr/stream.php');
+			xhr.setRequestHeader('X-Requestor','XHR');
+			xhr.send(null);*/
+		}
+	        
+	    function playRadio( urlName ) {
+	    	//navigator.notification.alert("In Play Radio");
+	    	BufferAudioPlugin.bufferRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
+	    }
+	       
+	    function stopRadio( urlName ) {
+	    	//navigator.notification.alert("In Stop Radio");
+	    	BufferAudioPlugin.stopRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
+	    }
+	    
+	    
+	    function nativePluginResultHandler (result) {
+	       //alert("SUCCESS: \r\n"+result );
+	    }
 	
-	/* When this function is called, Cordova has been initialized and is ready to roll */
-	/* If you are supporting your own protocol, the var invokeString will contain any arguments to the app launch.
-	see http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
-	for more details -jm */
-	function onDeviceReady()
-	{
-		// do your thing!
-		//navigator.notification.alert("Cordova is working");
-	}
-        
-    function playRadio( urlName ) {
-    	//navigator.notification.alert("In Play Radio");
-    	BufferAudioPlugin.bufferRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
-    }
-       
-    function stopRadio( urlName ) {
-    	//navigator.notification.alert("In Stop Radio");
-    	BufferAudioPlugin.stopRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
-    }
-    
-    
-    function nativePluginResultHandler (result) {
-       //alert("SUCCESS: \r\n"+result );
-    }
-
-    function nativePluginErrorHandler (error) {
-       //alert("ERROR: \r\n"+error );
-       
-       
-       //http://live.str3am.com:2410/wypr
-       //http://stream.radiosai.net:8002/
-       //http://www.hrupin.com/wp-content/uploads/mp3/testsong_20_sec.mp3 
-    }
+	    function nativePluginErrorHandler (error) {
+	       //alert("ERROR: \r\n"+error );
+	       
+	       
+	       //http://live.str3am.com:2410/wypr
+	       //http://stream.radiosai.net:8002/
+	       //http://www.hrupin.com/wp-content/uploads/mp3/testsong_20_sec.mp3 
+	    }
         
         
     
@@ -60,5 +67,7 @@
 		<h1>Hello!</h1>	       
 		<button onclick="playRadio('http://live.str3am.com:2410/wypr');">Click to Play Radio!</button>
 		<button onclick="stopRadio('http://live.str3am.com:2410/wypr');">Click to Stop Radio!</button>
+		
+		<p id="elemData"> </p>
 	</body>
 </html>
