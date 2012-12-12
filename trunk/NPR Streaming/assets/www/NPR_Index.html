@@ -1,19 +1,30 @@
 <!DOCTYPE html>
 <html>
-  <head>
-  <title></title>
-  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
-	<meta charset="utf-8">
-	
-	<!-- If your application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here -->
-	<script type="text/javascript" charset="utf-8" src="cordova-1.6.0.js"></script> 
-    <script type="text/javascript" charset="utf-8" src="BufferAudioPlugin.js"></script>
-    <script type="text/javascript" charset="utf-8" src="streaming.js"></script>
-    <link rel="stylesheet" href="index.css" type="text/css">
-    <script type="text/javascript">
-	   
-	
+<head>
+<title></title>
+
+<meta name="viewport"
+	content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+<meta charset="utf-8">
+
+<!-- If your application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here -->
+<script type="text/javascript" charset="utf-8" src="cordova-1.6.0.js"></script>
+<script type="text/javascript" charset="utf-8"
+	src="BufferAudioPlugin.js"></script>
+<script type="text/javascript" charset="utf-8" src="streaming.js"></script>
+<script src="http://code.jquery.com/jquery-1.8.3.js"> </script>
+<script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+<link rel="stylesheet" href="index.css" type="text/css">
+<link rel="stylesheet"
+	href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"
+	type="text/css">
+	 <style>#slider { margin: 10px; }  </style>
+<script>
+$( "#slider" ).slider();
+</script>	
+
+<script type="text/javascript">
+   
 		
     	function onBodyLoad()
 		{		
@@ -62,12 +73,15 @@
         
     
     </script>
-    </head>
-	<body onload="onBodyLoad()">
-		<h1>Hello!</h1>	       
-		<button onclick="playRadio('http://live.str3am.com:2410/wypr');">Click to Play Radio!</button>
-		<button onclick="stopRadio('http://live.str3am.com:2410/wypr');">Click to Stop Radio!</button>
-		
-		<p id="elemData"> </p>
-	</body>
+</head>
+<body onload="onBodyLoad()">
+	<h1>Hello!</h1>
+	<button onclick="playRadio('http://live.str3am.com:2410/wypr');">Click
+		to Play Radio!</button>
+	<button onclick="stopRadio('http://live.str3am.com:2410/wypr');">Click
+		to Stop Radio!</button>
+
+	<p id="elemData" class="captions"></p>
+	<div id="slider"></div>
+</body>
 </html>
