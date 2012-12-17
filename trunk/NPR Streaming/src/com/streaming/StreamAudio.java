@@ -46,7 +46,7 @@ public class StreamAudio extends Plugin {
 	public static String dirPath = "/sdcard/data/NPRmedia/";
 	private int INTIAL_KB_BUFFER ;
     private int BIT = 8 ;
-    private int SECONDS = 30 ;
+    private int SECONDS = 10 ;
     private File downloadingMediaFile ; 
 	private String FILE_NAME_SDCARD = "media";
 	private Vector<MediaPlayer> mediaplayers = new Vector<MediaPlayer>(3);
