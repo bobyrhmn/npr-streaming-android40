@@ -8,80 +8,143 @@
 <meta charset="utf-8">
 
 <!-- If your application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here -->
-<script type="text/javascript" charset="utf-8" src="cordova-1.6.0.js"></script>
+<script type="text/javascript" charset="utf-8" src="cordova-1.6.1.js"></script>
 <script type="text/javascript" charset="utf-8"
 	src="BufferAudioPlugin.js"></script>
 <script type="text/javascript" charset="utf-8" src="streaming.js"></script>
-<script src="http://code.jquery.com/jquery-1.8.3.js"> </script>
-<script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+<script type="text/javascript" charset="utf-8" src="jquery.1.8.3.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="jquery-1.9.2.ui.js"></script>
+<script type="text/javascript" charset="utf-8"
+	src="jquery.mobile-1.2.0.min.js"></script>
+
 <link rel="stylesheet" href="index.css" type="text/css">
+<link rel="stylesheet" href="jquery.mobile-1.1.0.min.css"
+	type="text/css">
+
 <link rel="stylesheet"
 	href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"
 	type="text/css">
-	 <style>#slider { margin: 10px; }  </style>
-<script>
-$( "#slider" ).slider();
-</script>	
+
+
 
 <script type="text/javascript">
-   
-		
-    	function onBodyLoad()
-		{		
-			document.addEventListener("deviceready", onDeviceReady, false);
-		}
-		
-		/* When this function is called, Cordova has been initialized and is ready to roll */
-		/* If you are supporting your own protocol, the var invokeString will contain any arguments to the app launch.
-		see http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
-		for more details -jm */
-		function onDeviceReady()
-		{
-			// do your thing!
-			navigator.notification.alert("Cordova is working");
-			startTextStreaming();
-			/*var xhr = new XMLHttpRequest();
-			xhr.open('GET','http://skappsrv.towson.edu/npr/stream.php');
-			xhr.setRequestHeader('X-Requestor','XHR');
-			xhr.send(null);*/
-		}
-	        
-	    function playRadio( urlName ) {
-	    	//navigator.notification.alert("In Play Radio");
-	    	BufferAudioPlugin.bufferRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
-	    }
-	       
-	    function stopRadio( urlName ) {
-	    	//navigator.notification.alert("In Stop Radio");
-	    	BufferAudioPlugin.stopRadioFunc( nativePluginResultHandler, nativePluginErrorHandler, urlName );
-	    }
-	    
-	    
-	    function nativePluginResultHandler (result) {
-	       //alert("SUCCESS: \r\n"+result );
-	    }
-	
-	    function nativePluginErrorHandler (error) {
-	       //alert("ERROR: \r\n"+error );
-	       
-	       
-	       //http://live.str3am.com:2410/wypr
-	       //http://stream.radiosai.net:8002/
-	       //http://www.hrupin.com/wp-content/uploads/mp3/testsong_20_sec.mp3 
-	    }
-        
-        
-    
-    </script>
-</head>
-<body onload="onBodyLoad()">
-	<h1>Hello!</h1>
-	<button onclick="playRadio('http://live.str3am.com:2410/wypr');">Click
-		to Play Radio!</button>
-	<button onclick="stopRadio('http://live.str3am.com:2410/wypr');">Click
-		to Stop Radio!</button>
+	var radioURL = 'http://live.str3am.com:2410/wypr';
+	document.addEventListener("deviceready", onDeviceReady, false);
 
-	<p id="elemData" class="captions"></p>
-	<div id="slider"></div>
+	/* When this function is called, Cordova has been initialized and is ready to roll */
+	/* If you are supporting your own protocol, the var invokeString will contain any arguments to the app launch.
+	see http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
+	for more details -jm */
+
+	//http://live.str3am.com:2410/wypr
+	//http://stream.radiosai.net:8002/
+	//http://www.hrupin.com/wp-content/uploads/mp3/testsong_20_sec.mp3 
+	function onDeviceReady() {
+		//navigator.notification.alert("Cordova is working");
+		startTextStreaming();
+
+		document.addEventListener("backbutton", backKeyDown, true);
+
+	}
+
+	//function onBackKey() {
+	function backKeyDown() {
+		stopRadio();
+		// We are going back to home so remove the event listener 
+		// so the default back key behaviour will take over
+
+		navigator.app.exitApp();
+
+	}
+
+	function playRadio() {
+		//navigator.notification.alert("Preparing to play");
+		BufferAudioPlugin.bufferRadioFunc(nativePluginResultHandler,
+				nativePluginErrorHandler, radioURL);
+	}
+
+	function stopRadio() {
+		BufferAudioPlugin.stopRadioFunc(nativePluginResultHandler,
+				nativePluginErrorHandler, radioURL);
+		stopTextStreaming();
+	}
+
+	function nativePluginResultHandler(result) {
+		//alert("SUCCESS: \r\n"+result );
+	}
+
+	function nativePluginErrorHandler(error) {
+
+	}
+</script>
+</head>
+
+
+<body>
+	<div data-role="page" id="NprHomePage">
+		<div data-role="header">
+			<h1>Listen live to NPR radio!</h1>
+			<a href="#" data-role="button" class="ui-btn-right"
+				data-inline="true" data-mini="true" data-theme="b"
+				onclick="backKeyDown(); return false" rel="external">Exit</a>
+
+		</div>
+		<div data-role="content">
+			<a href="#" data-role="button" id="playButton"
+				onclick="playRadio(); return false" rel="external">Play Radio!</a>
+			<div id="hiddenElemData" class="hiddenCaptions"></div>
+			<div id="elemData" class="captions"></div>
+		</div>
+
+		<!--div data-role="fieldcontain">
+			<label for="slider">Input slider:</label>
+			<div id="sliderDiv">
+				<   input type="range" name="slider" id="slider"
+					value="0" min="0" step="1"
+					max="15" />
+			</div>
+		</div>   -->
+
+	</div>
 </body>
+
+<script>
+	//http://stackoverflow.com/questions/7138772/how-to-detect-overflow-in-div-element
+ 
+	
+	//$('#NprHomePage').live('pageinit',function(event){
+	//	$( "#sliderDiv" ).change(function() {
+	//alert($(this).slider().val());
+	//streamFromSliderValue(('#slider').val());
+	//	});
+	//});
+
+	/*$(function() {
+
+		// Slider
+		$('#sliderDiv').slider({
+			min : 0,
+			max : 15,
+			slide : function(event, ui) {
+				streamFromSliderValue(ui.value);
+			},
+			
+			change : function(event, ui) {
+			 	alert('changing');
+				streamFromSliderValue(ui.value);
+			}
+		});
+
+
+	});*/
+	
+	/*$('#sliderDiv').dragslider({
+	animate : true,
+	range : true,
+	rangeDrag : true,
+	values : [ 1, 10 ]
+	});*/
+
+</script>
+
 </html>
