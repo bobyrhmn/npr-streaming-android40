@@ -7,24 +7,20 @@ var i = 0;
 var maxSlider = minSlider;*/ 
 
 function stopTextStreaming(){
-	source.close();
+	if(source!== undefined){
+		source.close();
+		}
 }
 
 
 //https://github.com/webinista/Server-Sent-Events-Demos/blob/master/lasteventid/index.html
 function startTextStreaming(){
-	var id_param = getURLParameter('id');
-
-
+ 
 	//$("#slider").attr("min", 0).slider("refresh");
 	//$("#slider").attr("max", currStreamedContents.length).slider("refresh");
 
-	if(id_param == null|| id_param == undefined){
-		source = new EventSource('http://skappsrv.towson.edu/npr/stream.php');
-	}
-	else{
-		source = new EventSource('http://skappsrv.towson.edu/npr/stream.php?id='+id_param);
-	}
+	source = new EventSource('http://skappsrv.towson.edu/npr/stream.php');
+
 	source.onmessage = function(e) {
 		updateCaptionAndSlider(e);
 	};
@@ -56,58 +52,9 @@ function updateCaptionAndSlider(e){
 		document.getElementById("elemData").innerHTML += e.data;
 
 
-		if(i<currStreamedContents.length){ 
-			currStreamedContents[i] = e.data;
-			//set the slider value
-			/*$('#slider').val(i);
-			$('#slider').slider("refresh");*/
-
-
-			//$( "#slider" ).slider( "value", i );
-
-			i++;
-		}else{
-			i = 0;
-		}
 	}
 }
+ 
 
-function streamFromSliderValue(value){
-	alert('slided value: ' + value);
-	//source.close();
-	document.getElementById("elemData").innerHTML = "";
-}
-
-//http://jsfiddle.net/timdown/VxTfu/
-function getSelectedWordIndex() {
-	var div = document.getElementById("content");
-
-	if (sel.rangeCount) {
-		// Get the selected range
-		var range = sel.getRangeAt(0);
-
-		// Check that the selection is wholly contained within the div text
-		if (range.commonAncestorContainer == div.firstChild) {
-			var precedingRange = document.createRange();
-			precedingRange.setStartBefore(div.firstChild);
-			precedingRange.setEnd(range.startContainer, range.startOffset);
-			var textPrecedingSelection = precedingRange.toString();
-			var wordIndex = textPrecedingSelection.split(/\s+/).length;
-			alert("Word index: " + wordIndex);
-		}
-	}
-
-}
-
-function getURLParameter( name )
-{
-	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-	var regexS = "[\\?&]"+name+"=([^&#]*)";
-	var regex = new RegExp( regexS );
-	var results = regex.exec( window.location.href );
-	if( results == null )
-		return null;
-	else
-		return results[1];
-}
+ 
 
