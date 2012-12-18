@@ -12,10 +12,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package com.streaming;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,9 +27,8 @@ import org.apache.cordova.api.PluginResult.Status;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
+import android.os.Environment;
 import android.util.Log;
 
 /**
@@ -43,7 +40,9 @@ import android.util.Log;
 public class StreamAudio extends Plugin {
 	
 	public static final int numberOfTempFiles = 10;
-	public static String dirPath = "/sdcard/data/NPRmedia/";
+	//public static String dirPath = "/sdcard0/data/NPRmedia/";
+	public static String dirPath;
+	
 	private int INTIAL_KB_BUFFER ;
     private int BIT = 8 ;
     private int SECONDS = 10 ;
@@ -74,6 +73,9 @@ public class StreamAudio extends Plugin {
 	@Override
 	public PluginResult execute(String action, JSONArray data, String callbackId) 
 	{	
+		dirPath = Environment.getExternalStoragePublicDirectory(
+		            Environment.DIRECTORY_DOWNLOADS).toString() + "/NPRmedia/";
+		 
 		playMusic = new PlayMusic(dirPath+"play_"+ FILE_NAME_SDCARD);
 		checkDirContents();
 
