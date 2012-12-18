@@ -8,7 +8,7 @@
 <meta charset="utf-8">
 
 <!-- If your application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here -->
-<script type="text/javascript" charset="utf-8" src="cordova-1.6.1.js"></script>
+<script type="text/javascript" charset="utf-8" src="cordova-1.7.0.js"></script>
 <script type="text/javascript" charset="utf-8"
 	src="BufferAudioPlugin.js"></script>
 <script type="text/javascript" charset="utf-8" src="streaming.js"></script>
@@ -39,7 +39,8 @@
 	//http://live.str3am.com:2410/wypr
 	//http://stream.radiosai.net:8002/
 	//http://www.hrupin.com/wp-content/uploads/mp3/testsong_20_sec.mp3 
-	function onDeviceReady() {
+	function onDeviceReady(){
+		playRadio();
  		startTextStreaming();
  		document.addEventListener("backbutton", backKeyDown, true);
  	}
@@ -85,8 +86,8 @@
 
 		</div>
 		<div data-role="content">
-			<a href="#" data-role="button" id="playButton"
-				onclick="playRadio(); return false" rel="external">Play Radio!</a>
+			<!-- a href="#" data-role="button" id="playButton"
+				onclick="stopRadio(); return false" rel="external">Stop Radio!</a-->
 			<div id="hiddenElemData" class="hiddenCaptions"></div>
 			<div id="elemData" class="captions"></div>
 		</div>
