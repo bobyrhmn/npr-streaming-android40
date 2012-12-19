@@ -23,12 +23,10 @@ public class PlayMusic extends Thread implements MediaPlayer.OnCompletionListene
 		this.isInterrupted = isInterrupted;
 	}
 	private String tempFileLocation;
-	private MediaPlayer mediaPlayer = null;
-	//private boolean isInterrupted = false;
-	private String TAG = "PoorniPlayMusic";
-
-
+	private MediaPlayer mediaPlayer = null;	
+	private String TAG = "NPRPlayMusic";
 	private int counter = 0;
+	
 	/**
 	 * Test whether we need to transfer buffered data to the MediaPlayer.
 	 * Interacting with MediaPlayer on non-main UI thread can causes crashes to so perform this using a Handler.
@@ -81,12 +79,15 @@ public class PlayMusic extends Thread implements MediaPlayer.OnCompletionListene
 
 	}
 
+	/**
+	 * 
+	 * @param mPlayer mediaplayer object to set the file desriptor resource to the new location. 
+	 * @return Mediaplayer object
+	 * @throws IOException
+	 */
 	private MediaPlayer updateFileLocation(MediaPlayer mPlayer)
 			throws IOException {
 		Log.d(TAG, "Setting  read file= " + tempFileLocation+ counter + ".dat");
-
-
-
 		mPlayer.setOnErrorListener(
 				new MediaPlayer.OnErrorListener() {
 					public boolean onError(MediaPlayer mp, int what, int extra) {
@@ -143,9 +144,12 @@ public class PlayMusic extends Thread implements MediaPlayer.OnCompletionListene
 		catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-
 	}
+
+	/**
+	 * 
+	 * @param mp mediaplayer resource should be released upon exit
+	 */
 	private void cleanup(MediaPlayer mp)
 	{
 		Log.d(TAG,"Playmusic thread releasing media plyr res and exiting");
@@ -153,6 +157,11 @@ public class PlayMusic extends Thread implements MediaPlayer.OnCompletionListene
 		counter=0;
 		return;
 	}
+	
+	/**
+	 * On completion of the mediaplayer this method is automatically invoked so as prepare 
+	 * media player to play next file(accessed through counter variable).
+	 */
 	public void onCompletion(MediaPlayer mp) {
 		
 		if (Thread.interrupted()) {
