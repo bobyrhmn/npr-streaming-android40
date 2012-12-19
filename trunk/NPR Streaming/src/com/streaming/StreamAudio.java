@@ -50,7 +50,7 @@ public class StreamAudio extends Plugin {
 	private String FILE_NAME_SDCARD = "media";
 	private Vector<MediaPlayer> mediaplayers = new Vector<MediaPlayer>(3);
 	private MediaPlayer mediaPlayer = null;
-	private String TAG = "PoorniPlayMusic";
+	private String TAG = "NPRPlayMusic";
 	  
 	private long mediaLengthInKb, mediaLengthInSeconds;
 	private int totalKbRead = 0;
@@ -73,6 +73,8 @@ public class StreamAudio extends Plugin {
 	@Override
 	public PluginResult execute(String action, JSONArray data, String callbackId) 
 	{	
+		
+		//Get the external storage environment.
 		dirPath = Environment.getExternalStoragePublicDirectory(
 		            Environment.DIRECTORY_DOWNLOADS).toString() + "/NPRmedia/";
 		 
@@ -117,110 +119,30 @@ public class StreamAudio extends Plugin {
 		return result;
 	}
 
-	
+
+	/**
+	 * Synchronized method invoked to set the interrupt to true
+	 */
 	private synchronized void setInterruptThread(){
 		Log.d(TAG,"Setting interrupt to true");
 		isInterrupted = true;
 	}
+	
+	/**
+	 * Synchronized method invoked to set the interrupt to false.
+	 */
 	private synchronized void ResetInterruptThread(){
 		Log.d(TAG,"Resetting interrupt to true");
 		isInterrupted = false;
 	}
-/*
-	@Override
-	public void onPrepared(MediaPlayer mp) {
-		Log.d(TAG, "Stream is prepared");
 
-	}
-
-	private void play() {
-		Uri myUri = Uri.parse(streamURL);
-		try {
-			if (mediaPlayer == null) {
-				mediaPlayer = new MediaPlayer();
-				mediaPlayer.reset();
-
-			} else {
-				mediaPlayer.stop();
-				mediaPlayer.reset();
-			}
-			try{
-				//mp.setDataSource(ctx.getContext(), myUri); // Go to Initialized state
-				mediaPlayer.setDataSource(myUri.toString()); // Go to Initialized state
-				mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-				mediaPlayer.prepare();
-				mediaPlayer.start();
-			}
-			catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalStateException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				mediaPlayer.reset();
-				mediaPlayer.prepare();
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			mediaPlayer.start();
-			if(mediaPlayer.isPlaying()){
-				mediaPlayer.setOnBufferingUpdateListener(this);
-			}
-			mediaPlayer.setOnPreparedListener(this);
-			mediaPlayer.setOnErrorListener(this);
-
-
-
-			Log.d(TAG, "LoadClip Done");
-		} catch (Throwable t) {
-			Log.d(TAG, t.toString());
-		}
-	}
-
-	private void pause() {
-		mediaPlayer.pause();
-	}
-
-	private void stop() {
-		mediaPlayer.stop();
-		isInterrupted = true;
-	}
-	public void onBufferingUpdate(MediaPlayer mp, int percent) {
-		Log.d(TAG, "PlayerService onBufferingUpdate : " + percent + "%");
-	}
-
-	public void onCompletion(MediaPlayer mp) {
-		stop();
-	}
-	public boolean onError(MediaPlayer mp, int what, int extra) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("Media Player Error: ");
-		switch (what) {
-		case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
-			sb.append("Not Valid for Progressive Playback");
-			break;
-		case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
-			sb.append("Server Died");
-			break;
-		case MediaPlayer.MEDIA_ERROR_UNKNOWN:
-			sb.append("Unknown");
-			break;
-		default:
-			sb.append(" Non standard (");
-			sb.append(what);
-			sb.append(")");
-		}
-		sb.append(" (" + what + ") ");
-		sb.append(extra);
-		Log.e(TAG, sb.toString());
-		return true;
-	}
-
-
-*/
+	/**
+	 * This method invokes a thread to begin buffering and it keeps preparing the 
+	 * temp buffer as multiple files and the media player can pick those files to play music from them.
+	 * @param mediaUrl The url of radio to play from.
+	 * @param bitrate Bitrate of HTTP Streaming
+	 * @throws IOException
+	 */
 	public void startBuffering(final String mediaUrl, int bitrate) throws IOException{
     	final String TAG = "startStreaming";
     	//Set up buffer size
@@ -238,10 +160,13 @@ public class StreamAudio extends Plugin {
 			}
 		};
 		downloadStreamThread.start();		 
-	}
-
+	}	
 	
-	
+	/**
+	 * This method downloads the bytes from the url and buffer the byte and pass the temp file(in form of bytes) to the media player engine.
+	 * @param mediaUrl The url to download bytes from
+	 * @throws IOException Incase of some exception in the buffering
+	 */
 	public void downloadAudioIncrement(String mediaUrl) throws IOException {
 	   	URLConnection cn = new URL(mediaUrl).openConnection(); 
         cn.connect();   
@@ -277,7 +202,6 @@ public class StreamAudio extends Plugin {
             }         
             
             if ( totalKbRead >= INTIAL_KB_BUFFER && !isInterrupted) {
-            	
             	//Log.v(TAG, "Reached Buffer amount we want: " + "totalKbRead: " + totalKbRead + " INTIAL_KB_BUFFER: " + INTIAL_KB_BUFFER);
             	bout.flush();
             	bout.close();
@@ -303,7 +227,7 @@ public class StreamAudio extends Plugin {
        	counter=0;
 	}
  
- 	
+ 	//To create new temp directory and also to delete the temp files upon app exit.
  	public static void checkDirContents() {
  	    File file = new File(dirPath);
  	    if (file.exists()) {

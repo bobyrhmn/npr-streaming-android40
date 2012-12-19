@@ -3,9 +3,9 @@ var source;
 var currStreamedContents = new Array(15);
 var i = 0;
 
-/*var minSlider =  0;
-var maxSlider = minSlider;*/ 
-
+/**
+ * To stop the streaming on exit.
+ */
 function stopTextStreaming(){
 	if(source!== undefined){
 		source.close();
@@ -13,7 +13,10 @@ function stopTextStreaming(){
 }
 
 
-//https://github.com/webinista/Server-Sent-Events-Demos/blob/master/lasteventid/index.html
+/**
+ * To begin the text streaming.
+ */
+
 function startTextStreaming(){
  
 	//$("#slider").attr("min", 0).slider("refresh");
@@ -31,6 +34,10 @@ function startTextStreaming(){
 	}, 10000);*/
 }
 
+/**
+ * Populate the ui with the values sent by server. 
+ * @param e The event captured onmessage of the EventSource
+ */
 
 function updateCaptionAndSlider(e){
 	var element = document.querySelector('#elemData');
@@ -43,10 +50,6 @@ function updateCaptionAndSlider(e){
 		document.getElementById("hiddenElemData").innerHTML = "";
 		document.getElementById("hiddenElemData").innerHTML = document.getElementById("elemData").innerHTML;
 		document.getElementById("elemData").innerHTML = "";
-
-
-
-		//alert(document.getElementById("hiddenElemData").innerHTML);
 	}
 	else{ //Shown captions div
 		document.getElementById("elemData").innerHTML += e.data;
@@ -55,6 +58,3 @@ function updateCaptionAndSlider(e){
 	}
 }
  
-
- 
-
